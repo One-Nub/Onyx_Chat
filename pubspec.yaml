@@ -1,0 +1,15 @@
+name: onyx_chat
+description: Text command handler for the Nyxx Dart package.
+version: 1.0.0
+homepage: https://github.com/One-Nub/Onyx_Chat
+
+environment:
+  sdk: '>=2.17.6 <3.0.0'
+
+dependencies:
+  logging: ^1.0.2
+  nyxx: ^4.0.0
+
+dev_dependencies:
+  lints: ^2.0.0
+  test: ^1.16.0
