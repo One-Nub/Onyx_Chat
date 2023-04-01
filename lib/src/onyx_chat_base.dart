@@ -38,21 +38,21 @@ class OnyxChat {
   ///
   /// User needs to manually dispatch messages either as an IMessage or a raw JSON representation.
   /// Those messages will then be handed to [dispatchIMessage] or [dispatchRawMessage] respectively.
-  /// A `prefix` or a `prefixHandler` function are required for using Onyx. 
+  /// A `prefix` or a `prefixHandler` function are required for using Onyx.
   /// `prefixHandler` takes precedence over `prefix` if both are passed.
-  OnyxChat (INyxxRest nyxxClient, {this.prefix, PrefixHandlerFunction? prefixHandler}) {
+  OnyxChat(INyxxRest nyxxClient, {this.prefix, PrefixHandlerFunction? prefixHandler}) {
     _nyxxClient = nyxxClient;
 
-    if(prefix == null && prefixHandler == null) {
+    if (prefix == null && prefixHandler == null) {
       _onyxLogger.shout("A prefix or prefixHandler must be defined for Onyx to work!");
       exit(1);
     }
 
-    if(prefix != null) {
+    if (prefix != null) {
       _prefixHandler = defaultPrefixHandler;
     }
 
-    if(prefixHandler != null) {
+    if (prefixHandler != null) {
       _prefixHandler = prefixHandler;
     }
 
@@ -73,7 +73,7 @@ class OnyxChat {
   ///
   /// Utilizes [prefix] to determine the prefix for a command.
   FutureOr<String?> defaultPrefixHandler(String message) async {
-    if(message.startsWith(prefix!)) {
+    if (message.startsWith(prefix!)) {
       return prefix!;
     } else {
       return null;
@@ -100,96 +100,98 @@ class OnyxChat {
   Future<void> dispatchIMessage(IMessage message, {String? messagePrefix}) async {
     ITextChannel textChannel = await message.channel.getOrDownload();
 
-     // Get message and parse for prefix. Stop execution if there's no prefix.
+    // Get message and parse for prefix. Stop execution if there's no prefix.
     String messageContent = message.content;
     // Determine prefix if not null
     messagePrefix ??= await _prefixHandler(messageContent);
-    if(messagePrefix == null) return;
+    if (messagePrefix == null) return;
 
     // Remove prefix and split message into list. Parse command name string. Stop
     // if message content is empty after removing prefix.
     messageContent = messageContent.replaceFirst(messagePrefix, "").trim();
-    if(messageContent.isEmpty) return;
+    if (messageContent.isEmpty) return;
     List<String> msgList = messageContent.split(" ");
 
     // Get a matching command.
     String cmdName = msgList.removeAt(0);
     TextCommand? matchingCommand = _parseCommand(cmdName);
-    if(matchingCommand == null) return;
+    if (matchingCommand == null) return;
 
     // Get a matching subcommand
     TextSubcommand? matchingSubcommand;
-    if(msgList.isNotEmpty && matchingCommand.subcommands != null &&
-      matchingCommand.subcommands!.isNotEmpty) {
-        String subCmdName = msgList.removeAt(0);
-        matchingSubcommand = _parseSubcommand(subCmdName, matchingCommand);
+    if (msgList.isNotEmpty &&
+        matchingCommand.subcommands != null &&
+        matchingCommand.subcommands!.isNotEmpty) {
+      String subCmdName = msgList.removeAt(0);
+      matchingSubcommand = _parseSubcommand(subCmdName, matchingCommand);
     }
 
     IGuild? messageGuild;
-    if(textChannel is ITextGuildChannel) {
+    if (textChannel is ITextGuildChannel) {
       messageGuild = await textChannel.guild.getOrDownload();
     }
 
-    TextCommandContext context = TextCommandContext(_nyxxClient, message.author, await message.channel.getOrDownload(),
-      "$messagePrefix$cmdName ${matchingSubcommand?.name ?? ""}".trim(), messageGuild, message);
+    TextCommandContext context = TextCommandContext(
+        _nyxxClient,
+        message.author,
+        await message.channel.getOrDownload(),
+        "$messagePrefix$cmdName ${matchingSubcommand?.name ?? ""}".trim(),
+        messageGuild,
+        message);
 
     //Needed to parse out args list since msgList only splits on spaces.
     //Replaces the command name, and the subcommand name if not null.
-    String finalMessage = message.content.replaceFirst(
-        ("$messagePrefix$cmdName ${matchingSubcommand?.name ?? ""}").trim(), "");
+    String finalMessage =
+        message.content.replaceFirst(("$messagePrefix$cmdName ${matchingSubcommand?.name ?? ""}").trim(), "");
 
     List<String> argsList = [];
-    if(finalMessage.isNotEmpty) {
+    if (finalMessage.isNotEmpty) {
       List<RegExpMatch> regexMatchList = _argsRegex.allMatches(finalMessage).toList();
       regexMatchList.forEach((element) {
         String finalMatch = element.group(0)!;
-        if(finalMatch.startsWith("'")) finalMatch = element.group(1)!;
-        if(finalMatch.startsWith("\"")) finalMatch = element.group(2)!;
+        if (finalMatch.startsWith("'")) finalMatch = element.group(1)!;
+        if (finalMatch.startsWith("\"")) finalMatch = element.group(2)!;
 
         argsList.add(finalMatch);
       });
     }
 
     String commandLogString = "Message dispatching to Command: ${matchingCommand.name}";
-    if(matchingSubcommand != null) {
+    if (matchingSubcommand != null) {
       commandLogString += ", Subcommand: ${matchingSubcommand.name}";
     }
     _onyxLogger.info(commandLogString);
-    if(matchingSubcommand != null) {
+    if (matchingSubcommand != null) {
       matchingSubcommand.commandEntry(context, messageContent, argsList);
-    }
-    else {
+    } else {
       matchingCommand.commandEntry(context, messageContent, argsList);
     }
   }
 
   /// Parses a command from a given Command name.
   TextCommand? _parseCommand(String commandName) {
-    if(commands.isEmpty) return null;
+    if (commands.isEmpty) return null;
 
     try {
       return commands.firstWhere((element) {
-        return element.commandNames.contains(commandName);
+        return element.commandNames.any((element) => element.toLowerCase() == commandName.toLowerCase());
       });
-    }
-    on StateError {
+    } on StateError {
       return null;
     }
   }
 
   /// Parses a Subcommand from a given Subcommand name and the parent Command.
   TextSubcommand? _parseSubcommand(String subCommandName, TextCommand parentCommand) {
-    if(parentCommand.subcommands == null) return null;
-    if(parentCommand.subcommands!.isEmpty) return null;
+    if (parentCommand.subcommands == null) return null;
+    if (parentCommand.subcommands!.isEmpty) return null;
 
     try {
       // Return subcommand where name is the first value in the splitmessage list
-      return parentCommand.subcommands!.firstWhere(
-        (element) => element.name == subCommandName);
-    }
-    on StateError {
+      return parentCommand.subcommands!
+          .firstWhere((element) => element.name.toLowerCase() == subCommandName.toLowerCase());
+    } on StateError {
       return null;
     }
-
   }
 }
