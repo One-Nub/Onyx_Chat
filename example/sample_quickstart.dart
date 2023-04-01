@@ -15,8 +15,8 @@ void main() async {
   onyx.addCommand(ExampleCommand());
 
   nyxxGateway.eventsWs.onMessageReceived.listen((event) {
-    if(event.message.author.bot) return;
-    
+    if (event.message.author.bot) return;
+
     onyx.dispatchIMessage(event.message);
   });
 }
@@ -34,11 +34,12 @@ class ExampleCommand extends TextCommand {
   @override
   Future<void> commandEntry(TextCommandContext ctx, String message, List<String> args) async {
     print("Args: $args");
-    if(ctx.guild == null) {
+    if (ctx.guild == null) {
       ctx.channel.sendMessage(MessageBuilder()..content = "This command can only be run in a guild!");
       return;
     }
-    ctx.channel.sendMessage(MessageBuilder()..content = "Sample command was triggered!"
+    ctx.channel.sendMessage(MessageBuilder()
+      ..content = "Sample command was triggered!"
       ..replyBuilder = ReplyBuilder(ctx.message.id));
   }
 }
@@ -47,15 +48,14 @@ class ExampleSubcommand extends TextSubcommand {
   @override
   get name => "sub";
 
-  @override 
+  @override
   get parentCommand => ExampleCommand();
 
   @override
   Future<void> commandEntry(TextCommandContext ctx, String messageContent, List<String> args) async {
-        print("Args: $args");
-        ctx.channel.sendMessage(MessageBuilder()
-            ..content = "Hello from subcommand $name!"
-            ..replyBuilder = ReplyBuilder(ctx.message.id)
-        );
-    }
+    print("Args: $args");
+    ctx.channel.sendMessage(MessageBuilder()
+      ..content = "Hello from subcommand $name!"
+      ..replyBuilder = ReplyBuilder(ctx.message.id));
+  }
 }

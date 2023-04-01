@@ -14,10 +14,10 @@ class OnyxConverter {
   /// true, `try, catch` the method or else it will terminate the execution of the method
   /// it is called inside.
   static Future<IRole?> getSingleRole(INyxxRest client, int guildID,
-    {int? roleID, String? roleName, bool debug: false}) async {
-      if(roleID == null && roleName == null) return null;
+      {int? roleID, String? roleName, bool debug: false}) async {
+    if (roleID == null && roleName == null) return null;
 
-      return await _getSingleRole(client, guildID, roleID: roleID, roleName: roleName)
+    return await _getSingleRole(client, guildID, roleID: roleID, roleName: roleName)
         .catchError((_) => null, test: (_) => !debug);
   }
 
@@ -30,17 +30,14 @@ class OnyxConverter {
   /// since if it was all in the public method, it would not be possible
   /// to return null from the stream. This is due to non-nullable syntax on returning
   /// elements from an error case not allowing null as a value.
-  static Future<IRole?> _getSingleRole(INyxxRest client, int guildID,
-    {int? roleID, String? roleName}) async {
-      Stream<IRole> roleStream = client.httpEndpoints.fetchGuildRoles(Snowflake(guildID));
-      IRole? resultingRole = await roleStream.firstWhere((element) {
-        return element.id.id == roleID || element.name == roleName;
-      });
+  static Future<IRole?> _getSingleRole(INyxxRest client, int guildID, {int? roleID, String? roleName}) async {
+    Stream<IRole> roleStream = client.httpEndpoints.fetchGuildRoles(Snowflake(guildID));
+    IRole? resultingRole = await roleStream.firstWhere((element) {
+      return element.id.id == roleID || element.name == roleName;
+    });
 
-      return resultingRole;
-    }
-
-
+    return resultingRole;
+  }
 
   /// Gets a single guild member from the API based on a [memberID] or [memberName] in a [guildID].
   ///
@@ -48,13 +45,12 @@ class OnyxConverter {
   /// true, `try, catch` the method or else it will terminate the execution of the method
   /// it is called inside.
   static Future<IMember?> getGuildMember(INyxxRest client, int guildID,
-    {int? memberID, String? memberName, bool debug: false}) async {
-      if(memberID == null && memberName == null) return null;
+      {int? memberID, String? memberName, bool debug: false}) async {
+    if (memberID == null && memberName == null) return null;
 
-      return _getGuildMember(client, guildID, memberID: memberID, memberName: memberName)
+    return _getGuildMember(client, guildID, memberID: memberID, memberName: memberName)
         .catchError((_) => null, test: (_) => !debug);
   }
-
 
   /// Gets a single guild member from the API based on a [memberID] or [memberName] in a [guildID].
   ///
@@ -67,20 +63,19 @@ class OnyxConverter {
   /// to return null from the stream. This is due to non-nullable syntax on returning
   /// elements from an error case not allowing null as a value.
   static Future<IMember?> _getGuildMember(INyxxRest client, int guildID,
-    {int? memberID, String? memberName}) async {
-      IMember? resultingMember;
-      if(memberID != null) {
-        resultingMember =
-          await client.httpEndpoints.fetchGuildMember(Snowflake(guildID), Snowflake(memberID));
-      }
-
-      if(resultingMember == null && memberName != null) {
-        memberName = memberName.replaceFirst(_discriminatorRegex, "");
-        Stream<IMember> memberStream = await
-          client.httpEndpoints.searchGuildMembers(Snowflake(guildID), memberName);
-        resultingMember = await memberStream.first;
-      }
-
-      return resultingMember;
+      {int? memberID, String? memberName}) async {
+    IMember? resultingMember;
+    if (memberID != null) {
+      resultingMember = await client.httpEndpoints.fetchGuildMember(Snowflake(guildID), Snowflake(memberID));
     }
+
+    if (resultingMember == null && memberName != null) {
+      memberName = memberName.replaceFirst(_discriminatorRegex, "");
+      Stream<IMember> memberStream =
+          await client.httpEndpoints.searchGuildMembers(Snowflake(guildID), memberName);
+      resultingMember = await memberStream.first;
+    }
+
+    return resultingMember;
+  }
 }
