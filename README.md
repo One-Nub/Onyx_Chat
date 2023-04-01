@@ -3,6 +3,10 @@ The chat-based counterpart for my little ecosystem of Discord bot command framew
 
 Onyx Chat is for legacy chat-based command handling, and as such is only best reserved for smaller, or private, chatbots.
 
+Updates will be rather minimal + rare since I only have one bot that utilizes this library at this point, and I still
+feel like there are better ways to handle chat commands than how I have done it here. But with chat commands being
+pushed out, I would suggest using one of my other libraries listed below, or even the ones provided by those maintaining Nyxx.
+
 ---
 
 ## Some important information!
